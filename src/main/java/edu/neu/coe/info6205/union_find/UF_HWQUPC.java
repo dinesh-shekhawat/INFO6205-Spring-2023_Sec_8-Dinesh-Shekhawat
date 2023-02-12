@@ -13,6 +13,7 @@ import java.util.Arrays;
  * Height-weighted Quick Union with Path Compression
  */
 public class UF_HWQUPC implements UF {
+	
     /**
      * Ensure that site p is connected to site q,
      *
@@ -81,9 +82,16 @@ public class UF_HWQUPC implements UF {
     public int find(int p) {
         validate(p);
         int root = p;
-        // FIXME
-        // END 
-        return root;
+        
+        if (pathCompression) {
+        	doPathCompression(root);
+        } else {
+        	while (root != parent[root]) {
+        		root = parent[root];
+        	}
+        }
+        
+        return parent[root];
     }
 
     /**
@@ -169,15 +177,28 @@ public class UF_HWQUPC implements UF {
     private boolean pathCompression;
 
     private void mergeComponents(int i, int j) {
-        // FIXME make shorter root point to taller one
-        // END 
+    	int rootX = find(i);
+    	int rootY = find(j);
+    	
+    	if (height[rootX] < height[rootY]) {
+    		parent[rootX] = rootY;
+    		height[rootY] += height[rootX];
+    	} else if (height[rootX] > height[rootY]) {
+    		parent[rootY] = rootX;
+    		height[rootX] += height[rootY];
+    	} else {
+    		parent[rootY] = rootX;
+    		height[rootX]++;
+    	}
     }
 
     /**
      * This implements the single-pass path-halving mechanism of path compression
      */
     private void doPathCompression(int i) {
-        // FIXME update parent to value of grandparent
-        // END 
+       while (i != parent[i]) {
+    	   parent[i] = parent[parent[i]];
+    	   i = parent[i];
+       }
     }
 }
