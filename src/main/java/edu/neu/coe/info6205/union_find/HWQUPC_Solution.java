@@ -111,57 +111,93 @@ public class HWQUPC_Solution {
 	}
 	
 	public static void main(String[] args) {
-		int min = 2, max = 2000, step = 1;
+		int min = 2, max = 2000, step = 1, simulations = 10;
 		
 		List<Integer> inputs = IntStream.iterate(min, i -> i <= max, i -> i + step)
 	            .boxed()
 	            .collect(Collectors.toList());
 		
-		List<Pair> diffPairs = new ArrayList<>(inputs.size());
-		
-		for (int input : inputs) {
-			int m = count(input);
-			int diff = input - m;
-			
-			diffPairs.add(new Pair(m, diff));
+		List<Pair> pairs = new ArrayList<>(inputs.size());
+		List<Pair> pairsCompressed = new ArrayList<>(inputs.size());
+		List<Pair> logPairs = new ArrayList<>(inputs.size());
+		List<Pair> linearPairs = new ArrayList<>(inputs.size());
 
-			System.out.println(input + " -> " + count(input) + " -> " + diff);
+		for (int input = 100; input < 1000000; input *= 2) {
+			double m = count(input, simulations, false);
+			double mCompressed = count(input, simulations, true);
+			
+			double log2Value = log2(input);
+			double log = ((double) input) * log2Value / 2;
+			
+			pairs.add(new Pair(input, m));
+			pairsCompressed.add(new Pair(input, mCompressed));
+			logPairs.add(new Pair(input, log));
+			linearPairs.add(new Pair(input, input));
+			
+			System.out.println(input 
+					+ " m -> " + m
+					+ " mCompressed -> " + mCompressed
+					+ " -> log = " + log + 
+					" -> log2Value = " + log2Value);
 		}
 		
 		HWQUPC_Solution plotter = new HWQUPC_Solution(
 				"Union Find Relationship",
-				"Generate value from n = " + min + " to " + max + ", increment = " + step,
+				"Generate value from n = " + min + " to " + max,
 				"n",
 				"m",
 				1200,
 				800);
 		
-		Group linerGroup = new Group("n - m", diffPairs);
+//		Group linerGroup = new Group("n - m", diffPairs);
+		Group group = new Group("m", pairs);
+		Group compressedGroup = new Group("m (compressed)", pairsCompressed);
+		Group logGroup = new Group("n * lg(n)", logPairs);
+		Group linearGroup = new Group("n", linearPairs);
 		
-		plotter.addGroup(linerGroup);
+//		plotter.addGroup(linerGroup);
+		plotter.addGroup(group);
+		plotter.addGroup(compressedGroup);
+		plotter.addGroup(logGroup);
+		plotter.addGroup(linearGroup);
 
 		plotter.plot();
 	}
 	
-	public static int count(int n) {
-        UF_HWQUPC uf = new UF_HWQUPC(n, true);
-        Random random = new Random();
-
-        int count = 0;
-        while(uf.components() > 1) {
-            int a = random.nextInt(n), b = random.nextInt(n);
-            
-            if(uf.connected(a, b)) {
-            	continue;
-            }
-            
-            uf.union(a, b);
-            count++;
-        }
-        
-        return count;
+	private static double log2(int N) {
+		double result = (Math.log10(N) / Math.log10(2));
+        return result;
     }
 	
-	
+	public static double count(
+			int n, 
+			int simulations,
+			boolean pathCompression) {
+        Random random = new Random();
+        double total = 0;
+        
+        for (int i = 0; i < simulations; i++) {
+            UF_HWQUPC uf = new UF_HWQUPC(n, pathCompression);
+
+            double count = 0;
+            while(uf.components() > 1) {
+            	int a = random.nextInt(n), b = random.nextInt(n);
+            	count++;
+
+            	if(uf.connected(a, b)) {
+            		continue;
+            	}
+
+            	uf.union(a, b);
+            }
+
+            total += count;
+//            System.out.println("total increase to: " + total);
+        }
+       
+        double average = total / (double) simulations;
+//        System.out.println("average: " + average);
+        return average;
+    }
 	
 }
