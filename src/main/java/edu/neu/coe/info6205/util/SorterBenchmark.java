@@ -1,11 +1,13 @@
 package edu.neu.coe.info6205.util;
 
-import edu.neu.coe.info6205.sort.SortWithHelper;
+import static edu.neu.coe.info6205.util.Utilities.formatWhole;
 
 import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
 
-import static edu.neu.coe.info6205.util.Utilities.formatWhole;
+import edu.neu.coe.info6205.sort.Helper;
+import edu.neu.coe.info6205.sort.InstrumentedHelper;
+import edu.neu.coe.info6205.sort.SortWithHelper;
 
 /**
  * Class to extend Benchmark_Timer for sorting an array of T values.
@@ -27,6 +29,14 @@ public class SorterBenchmark<T extends Comparable<T>> extends Benchmark_Timer<T[
         sorter.init(N);
         final double time = super.runFromSupplier(() -> generateRandomArray(ts), nRuns);
         for (TimeLogger timeLogger : timeLoggers) timeLogger.log(time, N);
+        
+        Helper<T> helper = sorter.getHelper();
+        if (helper.instrumented()) {
+        	InstrumentedHelper<T> instrumentedHelper = (InstrumentedHelper<T>) helper;
+            logger.info("Instrumentation:::: "  + instrumentedHelper.showStats());
+        } else {
+        	logger.info("NO INSTRUMENTATION::::"  + helper.showStats());
+        }
     }
 
     @Override
